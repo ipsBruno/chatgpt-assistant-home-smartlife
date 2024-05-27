@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>WebSocket Audio</title>
+  </head>
+  <body>
+    <script>
+      // Verifica se o navegador suporta Reconhecimento de Fala
+      if (!("webkitSpeechRecognition" in window)) {
+        alert(
+          "Seu navegador não suporta Reconhecimento de Fala. Tente no Chrome."
+        );
+      } else {
+        // Cria uma nova instância do objeto de reconhecimento de fala
+        var recognition = new webkitSpeechRecognition();
+
+        // Define a linguagem para o reconhecimento de fala (opcional)
+        recognition.lang = "pt-BR";
+
+        // Define se o reconhecimento de fala deve continuar mesmo após uma pausa (opcional)
+        recognition.continuous = true;
+
+        // Define a função de callback chamada quando o reconhecimento de fala é iniciado
+        recognition.onstart = function () {
+          console.log("Reconhecimento de fala iniciado.");
+        };
+
+        // Define a função de callback chamada quando o reconhecimento de fala é finalizado
+        recognition.onend = function () {
+          console.log("Reconhecimento de fala encerrado. Reiniciando...");
+          recognition.start();
+        };
+
+        // Define a função de callback chamada quando o texto é reconhecido
+        recognition.onresult = function (event) {
+          var transcript =
+            event.results[event.results.length - 1][0].transcript;
+          console.log("Texto reconhecido:", transcript);
+
+          // Envie o texto reconhecido via WebSocket
+          var socket = new WebSocket("ws://localhost:3000");
+          socket.addEventListener("open", function (event) {
+            socket.send(transcript);
+          });
+          socket.addEventListener("message", function (event) {
+            let utterance = new SpeechSynthesisUtterance(event.data);
+            speechSynthesis.speak(utterance);
+          });
+        };
+
+        // Inicia o reconhecimento de fala
+        recognition.start();
+      }
+    </script>
+  </body>
+</html>
